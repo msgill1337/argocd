@@ -20,6 +20,11 @@ jobs:
   build-test-scan:
     name: Build, Test & Security Scan
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write 
+      actions: read
     
     outputs:
       image-tag: ${{ steps.meta.outputs.image-tag }}
