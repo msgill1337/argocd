@@ -171,7 +171,7 @@ jobs:
         echo "Updating k8s/deployment.yaml with image: ${FULL_IMAGE}"
         
         # Update image in deployment.yaml
-        sed -i "s|image: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:.*|image: ${FULL_IMAGE}|g" k8s/deployment.yaml
+        sed -i "s|image:.*mynodeapp:.*|image: ${FULL_IMAGE}|" k8s/deployment.yaml
         
         # Verify the change
         echo "Updated deployment.yaml:"
