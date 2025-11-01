@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: mynodeapp
-        image: acrprod01mg1337.azurecr.io/mynodeapp:a968345-20251101-220240
+        image: acrprod01mg1337.azurecr.io/mynodeapp:652b38f-20251101-220411
         imagePullPolicy: Always
         ports:
         - name: http
