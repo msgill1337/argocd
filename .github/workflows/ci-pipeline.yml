@@ -20,6 +20,8 @@ jobs:
   build-test-scan:
     name: Build, Test & Security Scan
     runs-on: ubuntu-latest
+    # Skip if commit is from GitHub Actions Bot
+    if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[skip ci]')
 
     permissions:
       contents: read
