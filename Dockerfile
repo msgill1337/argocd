@@ -1,14 +1,44 @@
-FROM python:3.11-slim
+# Build stage
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy package files
+COPY package*.json ./
 
-COPY src/ ./src/
+# Install dependencies
+RUN npm ci --only=production
 
-ENV APP_VERSION=1.0.0
+# Production stage
+FROM node:18-alpine
 
+# Add non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy dependencies from builder
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy application files
+COPY --chown=nodejs:nodejs src/ ./src/
+COPY --chown=nodejs:nodejs package*.json ./
+
+# Set environment variables
+ENV NODE_ENV=production \
+    PORT=8080 \
+    APP_VERSION=1.0.0
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
 EXPOSE 8080
 
-CMD ["python", "src/app.py"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Start application
+CMD ["node", "src/server.js"]

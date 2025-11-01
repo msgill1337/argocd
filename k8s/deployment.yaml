@@ -1,39 +1,68 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp
+  name: mynodeapp
   labels:
-    app: myapp
+    app: mynodeapp
+    version: v1
 spec:
   replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
-      app: myapp
+      app: mynodeapp
   template:
     metadata:
       labels:
-        app: myapp
+        app: mynodeapp
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
-      - name: myapp
-        image: myappacr.azurecr.io/myapp:latest  # Will be replaced by CI
+      - name: mynodeapp
+        image: mynodeappacr.azurecr.io/mynodeapp:latest  # Will be updated by CI
+        imagePullPolicy: Always
         ports:
-        - containerPort: 8080
+        - name: http
+          containerPort: 8080
+          protocol: TCP
         env:
+        - name: NODE_ENV
+          value: "production"
         - name: APP_VERSION
           value: "1.0.0"
+        - name: PORT
+          value: "8080"
+        
+        # Liveness probe - restart if unhealthy
         livenessProbe:
           httpGet:
             path: /health
             port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 5
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # Readiness probe - don't send traffic until ready
         readinessProbe:
           httpGet:
             path: /health
             port: 8080
           initialDelaySeconds: 5
-          periodSeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Resource limits
         resources:
           requests:
             memory: "128Mi"
@@ -41,3 +70,20 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
+        
+        # Security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+      
+      # Restart policy
+      restartPolicy: Always
+      
+      # Security context for pod
+      securityContext:
+        fsGroup: 1001
