@@ -193,7 +193,7 @@ jobs:
           exit 0
         fi
         
-        git commit -m "🚀 Deploy: Update image to ${IMAGE_TAG}
+        git commit -m "🚀 Deploy: Update image to ${IMAGE_TAG} [ skip ci ]
 
         - Image: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
         - Commit: ${{ github.sha }}
