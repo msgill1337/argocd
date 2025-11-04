@@ -69,6 +69,36 @@ This project demonstrates a complete GitOps workflow where all infrastructure st
                                  └─────────────────┘
 ```
 
+## Screenshots
+
+### Application Running
+![Health Endpoint](screenshots/health-endpoint.png)
+*Application health check endpoint showing uptime and status*
+
+![Users API](screenshots/users-endpoint.png)
+*REST API endpoint returning mock user data*
+
+### CI/CD Pipeline
+![GitHub Actions Pipeline](screenshots/GitHub-Actions-Pipeline.png)
+*Successful CI/CD pipeline execution showing all jobs passing*
+
+![ArgoCD Sync Status](screenshots/argocd-sync-status.png)
+*ArgoCD automatically syncing changes from Git to Kubernetes*
+
+### Monitoring & Observability
+![Grafana Dashboard](screenshots/Grafana-dashboard.png)
+*Real-time metrics: request rate, response times, error rates, and resource usage*
+
+![Prometheus Targets](screenshots/prometheus-targets.png)
+*Prometheus successfully scraping metrics from application pods*
+
+### Infrastructure
+![Azure Container Registry](screenshots/ACR.png)
+*Docker images with unique tags (SHA + timestamp) in Azure Container Registry*
+
+---
+
+
 ## Tech Stack
 
 **Application:**
