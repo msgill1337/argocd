@@ -208,54 +208,45 @@ jobs:
         echo "✅ Manifest updated! ArgoCD will sync the changes."
 
   # Job 3: Apply Monitoring Configs (NEW)
-  apply-monitoring-configs:
-    name: Apply Monitoring Configs
-    needs: [build-test-scan, update-manifest]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+apply-monitoring-configs:
+  name: Apply Monitoring Configs
+  needs: [build-test-scan, update-manifest]
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  
+  steps:
+  - name: Checkout code
+    uses: actions/checkout@v4
+  
+  - name: Azure Login
+    uses: azure/login@v1
+    with:
+      creds: ${{ secrets.AZURE_CREDENTIALS }}
+  
+  - name: Set AKS context
+    run: |
+      az aks get-credentials \
+        --resource-group ${{ secrets.RESOURCE_GROUP }} \
+        --name ${{ secrets.CLUSTER_NAME }} \
+        --admin \
+        --overwrite-existing
+  
+  - name: Apply ServiceMonitor
+    run: |
+      echo "Applying ServiceMonitor for app metrics..."
+      kubectl apply -f k8s/servicemonitor.yaml
+      kubectl get servicemonitor mynodeapp-metrics -n default
+      echo "✅ ServiceMonitor applied successfully!"
+  
+  - name: Apply PrometheusRule (Alert Rules)
+    run: |
+      echo "Applying Prometheus alert rules..."
+      kubectl apply -f k8s/prometheus-rules.yaml
+      kubectl get prometheusrule mynodeapp-alerts -n monitoring
+      echo "✅ Alert rules applied successfully!"
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    - name: Set AKS context
-      uses: azure/aks-set-context@v3
-      with:
-        resource-group: ${{ secrets.RESOURCE_GROUP }}
-        cluster-name: ${{ secrets.CLUSTER_NAME }}
-    - name: Install kubelogin
-      run: |
-        curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
-        unzip kubelogin-linux-amd64.zip
-        sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
-        sudo chmod +x /usr/local/bin/kubelogin
-    - name: Apply ServiceMonitor
-      run: |
-        echo "Applying ServiceMonitor for app metrics..."
-        kubectl apply -f k8s/servicemonitor.yaml
-        
-        # Verify it was created
-        kubectl get servicemonitor mynodeapp-metrics -n default
-        
-        echo "✅ ServiceMonitor applied successfully!"
-
-    - name: Apply PrometheusRule (Alert Rules)
-      run: |
-        echo "Applying Prometheus alert rules..."
-        kubectl apply -f k8s/prometheus-rules.yaml
-        
-        # Verify it was created
-        kubectl get prometheusrule mynodeapp-alerts -n monitoring
-        
-        echo "✅ Alert rules applied successfully!"
-    
-    - name: Verify monitoring setup
-      run: |
+  - name: Verify monitoring setup
+    run: |
         echo "Checking if Prometheus is scraping the app..."
         
         # Check if ServiceMonitor is picked up by Prometheus
