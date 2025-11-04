@@ -18,16 +18,16 @@ This project demonstrates a complete GitOps workflow where all infrastructure st
 ## Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                    GitHub Repository                              │
-│  ┌────────────────┐              ┌─────────────────┐            │
-│  │  Application   │              │   Kubernetes    │            │
-│  │     Code       │              │   Manifests     │            │
-│  │                │              │                 │            │
-│  │  src/          │              │  k8s/           │            │
-│  │  Dockerfile    │              │  - deployment   │            │
-│  │  tests/        │              │  - service      │            │
-│  └────────┬───────┘              └────────┬────────┘            │
-└───────────┼──────────────────────────────┼──────────────────────┘
+│                    GitHub Repository                             │
+│  ┌────────────────┐              ┌─────────────────┐             │
+│  │  Application   │              │   Kubernetes    │             │
+│  │     Code       │              │   Manifests     │             │
+│  │                │              │                 │             │
+│  │  src/          │              │  k8s/           │             │
+│  │  Dockerfile    │              │  - deployment   │             │
+│  │  tests/        │              │  - service      │             │
+│  └────────┬───────┘              └────────┬────────┘             │
+└───────────┼──────────────────────────────┼───────────────────────┘
             │                              │
     Push triggers                    ArgoCD watches
             │                              │
@@ -55,9 +55,9 @@ This project demonstrates a complete GitOps workflow where all infrastructure st
 │              ArgoCD (CD)                 │                      │
 │                                          │                      │
 │  Continuously monitors Git repo          │                      │
-│  Detects manifest changes               │                      │
-│  Automatically syncs to AKS             │                      │
-│  Self-heals drift                       │                      │
+│  Detects manifest changes                │                      │
+│  Automatically syncs to AKS              │                      │
+│  Self-heals drift                        │                      │
 └──────────────────────────────────────────┼──────────────────────┘
                                            │
                                            ▼
@@ -90,7 +90,7 @@ This project demonstrates a complete GitOps workflow where all infrastructure st
 
 ### Monitoring & Observability
 ![Grafana Dashboard](screenshots/Grafana-dashboard.png)
-*Real-time metrics: request rate, response times, error rates, and resource usage*
+*Grafana - Real-time metrics: request rate, response times, error rates, and resource usage*
 
 ![Prometheus Targets](screenshots/prometheus-targets.png)
 *Prometheus successfully scraping metrics from application pods*
@@ -540,7 +540,6 @@ Things I'd add with more time:
 - [ ] Multiple environments (dev, staging, prod)
 - [ ] Approval gates for production deployments
 - [ ] Slack/Teams notifications for deployments
-- [ ] Prometheus + Grafana for monitoring
 - [ ] Helm charts instead of raw YAML
 - [ ] Progressive delivery (canary deployments)
 - [ ] Automated rollback on failed health checks
