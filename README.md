@@ -79,11 +79,14 @@ This project demonstrates a complete GitOps workflow where all infrastructure st
 *REST API endpoint returning mock user data*
 
 ### CI/CD Pipeline
-![GitHub Actions Pipeline](screenshots/GitHub-Actions-Pipeline.png)
+![GitHub Actions Pipeline](screenshots/GitHub-Actions_Pipeline.png)
 *Successful CI/CD pipeline execution showing all jobs passing*
 
-![ArgoCD Sync Status](screenshots/argocd-sync-status.png)
+![ArgoCD Sync Status](screenshots/argoCD-sync-status.png)
 *ArgoCD automatically syncing changes from Git to Kubernetes*
+
+![ArgoCD Sync Status](screenshots/argoCD.png)
+*ArgoCD Deployment Health*
 
 ### Monitoring & Observability
 ![Grafana Dashboard](screenshots/Grafana-dashboard.png)
