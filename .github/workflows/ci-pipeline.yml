@@ -8,7 +8,7 @@ on:
       - 'docs/**'
       - '.gitignore'
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 env:
   ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
@@ -72,7 +72,7 @@ jobs:
         severity: 'CRITICAL'
     
     - name: Upload Trivy results to GitHub Security
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-fs-results.sarif'
@@ -138,6 +138,10 @@ jobs:
         # Test root endpoint
         curl -f http://localhost:8080/ || exit 1
         
+        # NEW: Test metrics endpoint
+        curl -f http://localhost:8080/metrics || exit 1
+        echo "✅ Metrics endpoint is working!"
+        
         # Stop container
         docker stop test-container
         docker rm test-container
@@ -193,7 +197,7 @@ jobs:
           exit 0
         fi
         
-        git commit -m "🚀 Deploy: Update image to ${IMAGE_TAG} [ skip ci ]
+        git commit -m "🚀 Deploy: Update image to ${IMAGE_TAG} [skip ci]
 
         - Image: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
         - Commit: ${{ github.sha }}
@@ -203,10 +207,67 @@ jobs:
         
         echo "✅ Manifest updated! ArgoCD will sync the changes."
 
-  # Job 3: Notify on Success
+  # Job 3: Apply Monitoring Configs (NEW)
+  apply-monitoring-configs:
+    name: Apply Monitoring Configs
+    needs: [build-test-scan, update-manifest]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Set AKS context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: ${{ secrets.RESOURCE_GROUP }}
+        cluster-name: ${{ secrets.CLUSTER_NAME }}
+    
+    - name: Apply ServiceMonitor
+      run: |
+        echo "Applying ServiceMonitor for app metrics..."
+        kubectl apply -f k8s/servicemonitor.yaml
+        
+        # Verify it was created
+        kubectl get servicemonitor mynodeapp-metrics -n default
+        
+        echo "✅ ServiceMonitor applied successfully!"
+    
+    - name: Apply PrometheusRule (Alert Rules)
+      run: |
+        echo "Applying Prometheus alert rules..."
+        kubectl apply -f k8s/prometheus-rules.yaml
+        
+        # Verify it was created
+        kubectl get prometheusrule mynodeapp-alerts -n monitoring
+        
+        echo "✅ Alert rules applied successfully!"
+    
+    - name: Verify monitoring setup
+      run: |
+        echo "Checking if Prometheus is scraping the app..."
+        
+        # Check if ServiceMonitor is picked up by Prometheus
+        kubectl get servicemonitor -n default
+        
+        echo ""
+        echo "📊 Monitoring Status:"
+        echo "- ServiceMonitor: ✅ Applied"
+        echo "- PrometheusRule: ✅ Applied"
+        echo ""
+        echo "Prometheus should start scraping metrics within 30 seconds."
+        echo "Check Prometheus targets: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090"
+
+  # Job 4: Notify on Success
   notify-success:
     name: Notify Deployment
-    needs: [build-test-scan, update-manifest]
+    needs: [build-test-scan, update-manifest, apply-monitoring-configs]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
@@ -220,4 +281,8 @@ jobs:
         echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "✅ Image pushed to ACR and manifest updated. ArgoCD will deploy automatically." >> $GITHUB_STEP_SUMMARY
+        echo "### Monitoring" >> $GITHUB_STEP_SUMMARY
+        echo "- ServiceMonitor: ✅ Applied" >> $GITHUB_STEP_SUMMARY
+        echo "- Alert Rules: ✅ Applied" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Image pushed to ACR, manifest updated, and monitoring configured. ArgoCD will deploy automatically." >> $GITHUB_STEP_SUMMARY

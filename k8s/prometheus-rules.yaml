@@ -1,0 +1,78 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mynodeapp-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus
+    release: monitoring
+spec:
+  groups:
+    - name: mynodeapp-alerts
+      interval: 30s
+      rules:
+        # High error rate alert
+        - alert: HighErrorRate
+          expr: |
+            (
+              sum(rate(http_requests_total{status_code=~"5..",namespace="default"}[5m]))
+              /
+              sum(rate(http_requests_total{namespace="default"}[5m]))
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            component: mynodeapp
+          annotations:
+            summary: "High error rate detected in mynodeapp"
+            description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+        
+        # Slow response time alert
+        - alert: SlowResponseTime
+          expr: |
+            histogram_quantile(0.95, 
+              sum(rate(http_request_duration_seconds_bucket{namespace="default"}[5m])) by (le)
+            ) > 2
+          for: 5m
+          labels:
+            severity: warning
+            component: mynodeapp
+          annotations:
+            summary: "Slow response time detected"
+            description: "P95 latency is {{ $value }}s (threshold: 2s)"
+        
+        # High memory usage alert
+        - alert: HighMemoryUsage
+          expr: |
+            nodejs_heap_size_used_bytes{namespace="default"} > 500000000
+          for: 10m
+          labels:
+            severity: warning
+            component: mynodeapp
+          annotations:
+            summary: "High memory usage in mynodeapp"
+            description: "Heap usage is {{ $value | humanize }}B (threshold: 500MB)"
+        
+        # Pod down alert
+        - alert: PodDown
+          expr: |
+            kube_pod_status_phase{namespace="default",pod=~"mynodeapp.*",phase!="Running"} == 1
+          for: 5m
+          labels:
+            severity: critical
+            component: mynodeapp
+          annotations:
+            summary: "mynodeapp pod is down"
+            description: "Pod {{ $labels.pod }} is in {{ $labels.phase }} state"
+        
+        # High request rate (might need scaling)
+        - alert: HighRequestRate
+          expr: |
+            sum(rate(http_requests_total{namespace="default"}[5m])) > 100
+          for: 10m
+          labels:
+            severity: info
+            component: mynodeapp
+          annotations:
+            summary: "High request rate detected"
+            description: "Request rate is {{ $value }} req/s. Consider scaling."
