@@ -1,19 +1,27 @@
 # GitOps Deployment Pipeline with GitHub Actions + ArgoCD
 
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+![ArgoCD](https://img.shields.io/badge/ArgoCD-EF7B4D?style=for-the-badge&logo=argo&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=Prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=for-the-badge&logo=grafana&logoColor=white)
+
+
 A production-ready CI/CD pipeline implementing GitOps principles to deploy a containerized Node.js application to Azure Kubernetes Service. The pipeline uses GitHub Actions for continuous integration and ArgoCD for continuous deployment, with Git as the single source of truth.
 
 ## Overview
 
 This project demonstrates a complete GitOps workflow where all infrastructure state is stored in Git, and ArgoCD continuously monitors the repository to keep the cluster in sync. The CI pipeline builds, tests, and scans container images, then updates Kubernetes manifests in Git. ArgoCD detects these changes and automatically deploys to AKS.
 
-**Key Features:**
-- Fully automated CI/CD pipeline
-- Security scanning at multiple levels (code, dependencies, container)
-- Container testing before deployment
-- GitOps-based deployment with ArgoCD
-- Security-hardened Kubernetes deployments
-- Unique, traceable image tags
-- Self-healing cluster state
+## Key Features
+
+- ✅ **Automated CI/CD** - GitHub Actions builds, tests, and deploys automatically
+- ✅ **GitOps Deployment** - ArgoCD ensures cluster state matches Git
+- ✅ **Security First** - Multi-layer scanning (Trivy), hardened containers, non-root execution
+- ✅ **Observability** - Prometheus metrics + Grafana dashboards for real-time monitoring
+- ✅ **Zero Downtime** - Rolling updates with maxUnavailable: 0
+- ✅ **Self-Healing** - ArgoCD automatically corrects configuration drift
+- ✅ **Traceable Deployments** - Unique image tags map to exact Git commits
 
 ## Architecture
 ```
@@ -90,7 +98,8 @@ This project demonstrates a complete GitOps workflow where all infrastructure st
 
 ### Monitoring & Observability
 ![Grafana Dashboard](screenshots/Grafana-dashboard.png)
-*Grafana - Real-time metrics: request rate, response times, error rates, and resource usage*
+*Grafana - Real-time view of request rates, response times (p50, p95, p99), and error rates*
+
 
 ![Prometheus Targets](screenshots/prometheus-targets.png)
 *Prometheus successfully scraping metrics from application pods*
@@ -98,6 +107,27 @@ This project demonstrates a complete GitOps workflow where all infrastructure st
 ### Infrastructure
 ![Azure Container Registry](screenshots/ACR.png)
 *Docker images with unique tags (SHA + timestamp) in Azure Container Registry*
+
+## Monitoring
+
+### What This Monitoring Setup Enables
+
+**For Developers:**
+- See real-time request rates and response times
+- Identify slow endpoints
+- Track error rates by endpoint
+
+**For Operations:**
+- Monitor pod CPU and memory usage
+- Set up alerts for high error rates
+- Correlate deployments with metric changes
+- Debug production issues with historical data
+
+**In Production:**
+This stack would integrate with alerting (AlertManager) to notify on-call engineers of critical issues like:
+- Error rate > 5% for 5 minutes
+- Response time p95 > 1 second
+- Pod crash looping
 
 ---
 
