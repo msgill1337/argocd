@@ -228,7 +228,12 @@ jobs:
       with:
         resource-group: ${{ secrets.RESOURCE_GROUP }}
         cluster-name: ${{ secrets.CLUSTER_NAME }}
-    
+    - name: Install kubelogin
+      run: |
+        curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
+        unzip kubelogin-linux-amd64.zip
+        sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
+        sudo chmod +x /usr/local/bin/kubelogin
     - name: Apply ServiceMonitor
       run: |
         echo "Applying ServiceMonitor for app metrics..."
@@ -238,7 +243,7 @@ jobs:
         kubectl get servicemonitor mynodeapp-metrics -n default
         
         echo "✅ ServiceMonitor applied successfully!"
-    
+
     - name: Apply PrometheusRule (Alert Rules)
       run: |
         echo "Applying Prometheus alert rules..."
