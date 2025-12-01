@@ -9,7 +9,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/msgill1337/argocd.git
+    # Replace with your GitHub repository URL
+    # Example: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+    repoURL: https://github.com/YOUR_USERNAME/YOUR_REPO.git
     targetRevision: main
     path: k8s
 

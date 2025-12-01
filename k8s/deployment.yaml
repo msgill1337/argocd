@@ -27,7 +27,9 @@ spec:
     spec:
       containers:
       - name: mynodeapp
-        image: acrprod01mg1337.azurecr.io/mynodeapp:0c26ed1-20251104-003318
+        # Image tag is automatically updated by CI/CD pipeline
+        # Format: <ACR_LOGIN_SERVER>/mynodeapp:<git-sha>-<timestamp>
+        image: yourregistry.azurecr.io/mynodeapp:latest
         imagePullPolicy: Always
         ports:
         - name: http

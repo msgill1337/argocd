@@ -291,12 +291,11 @@ kubectl get svc mynodeapp-service -o jsonpath='{.status.loadBalancer.ingress[0].
 ├── k8s/
 │   ├── deployment.yaml           # Kubernetes Deployment
 │   ├── service.yaml              # Kubernetes Service
-│   └── namespace.yaml            # Namespace definition
+│   ├── servicemonitor.yaml       # Prometheus ServiceMonitor
+│   └── prometheus-rules.yaml     # Prometheus alert rules
 ├── src/
-│   ├── routes/
 │   ├── app.js                    # Express application
-│   ├── server.js                 # Server entry point
-│   └── package.json
+│   └── server.js                 # Server entry point
 ├── tests/
 │   └── app.test.js               # Unit tests
 ├── Dockerfile                    # Multi-stage Docker build
@@ -401,14 +400,17 @@ kubectl get svc mynodeapp-service -o jsonpath='{.status.loadBalancer.ingress[0].
 
 **Test the API:**
 ```bash
+# Get the service IP first
+SERVICE_IP=$(kubectl get svc mynodeapp-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
 # Health check
-curl http:///health
+curl http://${SERVICE_IP}/health
 
 # Get data
-curl http:///
+curl http://${SERVICE_IP}/
 
 # Check version info
-curl http:///health | jq .
+curl http://${SERVICE_IP}/health | jq .
 ```
 
 ## Troubleshooting
